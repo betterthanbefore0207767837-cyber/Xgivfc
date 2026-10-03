@@ -1,1 +1,57 @@
+--// Sata Andagi Kill Sound
+--// Works for players AND NPC dummies
 
+local Players = game:GetService("Players")
+local SoundService = game:GetService("SoundService")
+
+local SOUND_ID = "rbxassetid://135097031120155"
+
+local function playKillSound()
+    local sound = Instance.new("Sound")
+    sound.Name = "SataAndagiKillSound"
+    sound.SoundId = SOUND_ID
+    sound.Volume = 1
+    sound.Parent = SoundService
+    sound:Play()
+
+    sound.Ended:Once(function()
+        sound:Destroy()
+    end)
+end
+
+local watched = {}
+
+local function watchCharacter(character)
+    if watched[character] then
+        return
+    end
+
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if not humanoid then
+        return
+    end
+
+    watched[character] = true
+
+    humanoid.Died:Connect(function()
+        playKillSound()
+    end)
+end
+
+-- Watch existing characters/dummies
+for _, object in ipairs(workspace:GetDescendants()) do
+    if object:IsA("Model") and object:FindFirstChildOfClass("Humanoid") then
+        watchCharacter(object)
+    end
+end
+
+-- Watch newly spawned players and dummies
+workspace.DescendantAdded:Connect(function(object)
+    if object:IsA("Humanoid") then
+        local character = object.Parent
+
+        if character and character:IsA("Model") then
+            watchCharacter(character)
+        end
+    end
+end)
